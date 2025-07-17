@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>영업사원 성향 분석 검사 (SPTA)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #e0e0e0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .intro, .question-container, .result-container {
+            display: none;
+        }
+
+        .intro.active, .question-container.active, .result-container.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .intro h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .intro ul {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .intro li {
+            padding: 10px 0;
+            color: #555;
+            font-size: 1.05em;
+            display: flex;
+            align-items: center;
+        }
+
+        .intro li:before {
+            content: "✓";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 30px;
+            font-weight: 600;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .question-number {
+            color: #667eea;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .category-badge {
+            background: #f0f0f0;
+            color: #666;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.05em;
+            color: #444;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+        }
+
+        .nav-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .prev-btn {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .prev-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .next-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .next-btn:hover {
+            background: #5a6dd8;
+        }
+
+        .next-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .result-type {
+            font-size: 3em;
+            color: #667eea;
+            font-weight: 700;
+            margin: 20px 0;
+            letter-spacing: 2px;
+        }
+
+        .result-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .result-subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .dimension-results {
+            margin: 30px 0;
+        }
+
+        .dimension {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .dimension-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .dimension-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .dimension-result {
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .dimension-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .bar-container {
+            flex: 1;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin: 0 15px;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .bar-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .strength-indicator {
+            display: flex;
+            gap: 3px;
+            margin-left: 10px;
+        }
+
+        .strength-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e0e0e0;
+        }
+
+        .strength-dot.filled {
+            background: #667eea;
+        }
+
+        .analysis {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f0f4ff 100%);
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+        }
+
+        .analysis h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .analysis-section {
+            margin-bottom: 20px;
+        }
+
+        .analysis-section h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .analysis-section p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .analysis-list {
+            list-style: none;
+            margin-top: 10px;
+        }
+
+        .analysis-list li {
+            color: #555;
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .analysis-list li:before {
+            content: "•";
+            color: #667eea;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .action-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.05em;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .restart-btn {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .restart-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                border-radius: 0;
+                min-height: 100vh;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .header p {
+                font-size: 1em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .intro h2 {
+                font-size: 1.5em;
+            }
+            
+            .intro ul {
+                margin: 15px 0;
+            }
+            
+            .intro li {
+                font-size: 0.95em;
+                padding: 8px 0;
+            }
+            
+            .question-text {
+                font-size: 1.15em;
+                margin-bottom: 25px;
+            }
+            
+            .option {
+                padding: 18px;
+                font-size: 1em;
+            }
+            
+            .navigation {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                padding: 15px 20px;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+                margin-top: 60px;
+            }
+            
+            .nav-btn {
+                padding: 14px 25px;
+                font-size: 1em;
+            }
+            
+            .result-type {
+                font-size: 2.2em;
+                letter-spacing: 1px;
+            }
+            
+            .result-title {
+                font-size: 1.3em;
+            }
+            
+            .dimension {
+                padding: 15px;
+                margin-bottom: 12px;
+            }
+            
+            .dimension-name {
+                font-size: 1em;
+            }
+            
+            .analysis {
+                padding: 20px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+                padding-bottom: 20px;
+            }
+            
+            .action-btn {
+                width: 100%;
+                padding: 16px;
+            }
+            
+            /* 터치 친화적 요소 */
+            .option {
+                -webkit-tap-highlight-color: rgba(102, 126, 234, 0.2);
+                touch-action: manipulation;
+            }
+            
+            .nav-btn, .action-btn, .start-btn {
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            /* 스크롤 여유 공간 */
+            .question-container.active {
+                padding-bottom: 80px;
+            }
+            
+            /* 입력 필드 최적화 */
+            input[type="text"] {
+                font-size: 16px; /* iOS 자동 줌 방지 */
+                -webkit-appearance: none;
+            }
+        }
+        
+        /* 가로 모드 대응 */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .option {
+                padding: 12px;
+            }
+            
+            .navigation {
+                position: relative;
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SPTA</h1>
+            <p>Sales Personality Type Assessment</p>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+        
+        <div class="content">
+            <!-- 시작 화면 -->
+            <div class="intro active" id="intro">
+                <h2>영업사원 성향 분석 검사</h2>
+                <p>당신의 영업 스타일을 8가지 차원에서 분석하여 최적의 영업 전략을 제시합니다.</p>
+                
+                <ul>
+                    <li>총 32문항 (약 10분 소요)</li>
+                    <li>각 문항에서 자신과 더 가까운 답변 선택</li>
+                    <li>정답은 없으며, 솔직한 응답이 중요합니다</li>
+                    <li>결과는 즉시 확인 가능합니다</li>
+                </ul>
+                
+                <div style="margin-top: 30px;">
+                    <label style="display: block; margin-bottom: 10px; color: #666; font-weight: 600;">이름을 입력해주세요</label>
+                    <input type="text" id="userName" placeholder="홍길동" style="width: 100%; padding: 12px 20px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em; transition: border-color 0.2s;">
+                </div>
+                
+                <button class="start-btn" onclick="startTest()">검사 시작하기</button>
+            </div>
+            
+            <!-- 질문 화면 -->
+            <div class="question-container" id="questionContainer">
+                <div class="question-header">
+                    <span class="question-number" id="questionNumber">문항 1/32</span>
+                    <span class="category-badge" id="categoryBadge">일 처리 방식</span>
+                </div>
+                
+                <h2 class="question-text" id="questionText"></h2>
+                
+                <div class="options" id="optionsContainer"></div>
+                
+                <div class="navigation">
+                    <button class="nav-btn prev-btn" onclick="previousQuestion()" id="prevBtn">이전</button>
+                    <button class="nav-btn next-btn" onclick="nextQuestion()" id="nextBtn" disabled>다음</button>
+                </div>
+            </div>
+            
+            <!-- 결과 화면 -->
+            <div class="result-container" id="resultContainer">
+                <div class="result-header">
+                    <h2>당신의 영업 성향 유형은</h2>
+                    <div class="result-type" id="resultType"></div>
+                    <h3 class="result-title" id="resultTitle"></h3>
+                    <p class="result-subtitle" id="resultSubtitle"></p>
+                </div>
+                
+                <div class="dimension-results" id="dimensionResults"></div>
+                
+                <div class="analysis" id="analysisSection"></div>
+                
+                <div class="action-buttons">
+                    <button class="action-btn restart-btn" onclick="restartTest()">다시 검사하기</button>
+                    <button class="action-btn save-btn" onclick="saveResult()">결과 저장하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 질문 데이터
+        const questions = [
+            // Part 1: 일 처리 방식 (P/F)
+            {
+                category: "일 처리 방식",
+                dimension: 0,
+                text: "새로운 프로젝트를 시작할 때 나는:",
+                options: [
+                    { text: "먼저 전체 일정과 세부 계획을 수립한다", value: "P" },
+                    { text: "큰 틀만 잡고 상황에 따라 조정해나간다", value: "F" }
+                ]
+            },
+            {
+                category: "일 처리 방식",
+                dimension: 0,
+                text: "고객 미팅 준비 시 나는:",
+                options: [
+                    { text: "시나리오별 대응 방안을 미리 준비한다", value: "P" },
+                    { text: "핵심만 준비하고 현장에서 유연하게 대응한다", value: "F" }
+                ]
+            },
+            {
+                category: "일 처리 방식",
+                dimension: 0,
+                text: "일정이 갑자기 변경되면:",
+                options: [
+                    { text: "스트레스를 받으며 새로운 계획을 세운다", value: "P" },
+                    { text: "자연스럽게 받아들이고 즉흥적으로 대처한다", value: "F" }
+                ]
+            },
+            {
+                category: "일 처리 방식",
+                dimension: 0,
+                text: "업무 우선순위를 정할 때:",
+                options: [
+                    { text: "체크리스트와 일정표를 활용한다", value: "P" },
+                    { text: "그때그때 중요도를 판단하여 처리한다", value: "F" }
+                ]
+            },
+            // Part 2: 대인관계 태도 (C/L)
+            {
+                category: "대인관계 태도",
+                dimension: 1,
+                text: "팀 프로젝트에서 나는:",
+                options: [
+                    { text: "팀원들의 의견을 조율하는 역할을 한다", value: "C" },
+                    { text: "방향을 제시하고 이끄는 역할을 한다", value: "L" }
+                ]
+            },
+            {
+                category: "대인관계 태도",
+                dimension: 1,
+                text: "고객과의 관계에서:",
+                options: [
+                    { text: "고객의 니즈에 맞춰 조정하는 편이다", value: "C" },
+                    { text: "내가 제안하는 방향으로 설득하는 편이다", value: "L" }
+                ]
+            },
+            {
+                category: "대인관계 태도",
+                dimension: 1,
+                text: "의견 충돌이 있을 때:",
+                options: [
+                    { text: "서로 만족할 수 있는 중간점을 찾는다", value: "C" },
+                    { text: "내 의견의 타당성을 적극 주장한다", value: "L" }
+                ]
+            },
+            {
+                category: "대인관계 태도",
+                dimension: 1,
+                text: "네트워킹 자리에서:",
+                options: [
+                    { text: "다른 사람들과 조화롭게 어울린다", value: "C" },
+                    { text: "대화를 주도하며 주목받는 편이다", value: "L" }
+                ]
+            },
+            // Part 3: 성과 접근 (S/T)
+            {
+                category: "성과 접근",
+                dimension: 2,
+                text: "목표 설정 시:",
+                options: [
+                    { text: "꾸준히 달성 가능한 현실적 목표를 선호한다", value: "S" },
+                    { text: "도전적이고 높은 목표를 선호한다", value: "T" }
+                ]
+            },
+            {
+                category: "성과 접근",
+                dimension: 2,
+                text: "성과를 낼 때:",
+                options: [
+                    { text: "일정한 페이스로 안정적인 실적을 유지한다", value: "S" },
+                    { text: "목표 달성을 위해 집중적으로 추진한다", value: "T" }
+                ]
+            },
+            {
+                category: "성과 접근",
+                dimension: 2,
+                text: "동기부여 요인은:",
+                options: [
+                    { text: "지속적인 성장과 안정적인 커리어", value: "S" },
+                    { text: "목표 달성의 성취감과 인정", value: "T" }
+                ]
+            },
+            {
+                category: "성과 접근",
+                dimension: 2,
+                text: "실적 관리 시:",
+                options: [
+                    { text: "장기적 관점에서 균형있게 관리한다", value: "S" },
+                    { text: "단기 목표 달성에 집중한다", value: "T" }
+                ]
+            },
+            // Part 4: 감정 표현 (R/E)
+            {
+                category: "감정 표현",
+                dimension: 3,
+                text: "성공했을 때 나는:",
+                options: [
+                    { text: "내면으로 기쁨을 느끼며 차분하게 받아들인다", value: "R" },
+                    { text: "기쁨을 적극적으로 표현하고 공유한다", value: "E" }
+                ]
+            },
+            {
+                category: "감정 표현",
+                dimension: 3,
+                text: "고객과의 소통에서:",
+                options: [
+                    { text: "전문적이고 절제된 태도를 유지한다", value: "R" },
+                    { text: "친근하고 감정을 솔직하게 표현한다", value: "E" }
+                ]
+            },
+            {
+                category: "감정 표현",
+                dimension: 3,
+                text: "스트레스를 받을 때:",
+                options: [
+                    { text: "겉으로 티를 내지 않으려 한다", value: "R" },
+                    { text: "주변에 털어놓고 공감을 구한다", value: "E" }
+                ]
+            },
+            {
+                category: "감정 표현",
+                dimension: 3,
+                text: "팀 회의에서:",
+                options: [
+                    { text: "필요한 말만 간결하게 한다", value: "R" },
+                    { text: "적극적으로 의견과 감정을 표현한다", value: "E" }
+                ]
+            },
+            // Part 5: 스트레스 대응 (O/A)
+            {
+                category: "스트레스 대응",
+                dimension: 4,
+                text: "실패를 경험했을 때:",
+                options: [
+                    { text: "다음엔 잘될 거라고 긍정적으로 생각한다", value: "O" },
+                    { text: "원인을 분석하고 개선점을 찾는다", value: "A" }
+                ]
+            },
+            {
+                category: "스트레스 대응",
+                dimension: 4,
+                text: "어려운 상황에서:",
+                options: [
+                    { text: "어떻게든 되겠지라고 생각한다", value: "O" },
+                    { text: "다양한 시나리오를 검토한다", value: "A" }
+                ]
+            },
+            {
+                category: "스트레스 대응",
+                dimension: 4,
+                text: "리스크 평가 시:",
+                options: [
+                    { text: "기회에 더 초점을 맞춘다", value: "O" },
+                    { text: "위험 요소를 철저히 분석한다", value: "A" }
+                ]
+            },
+            {
+                category: "스트레스 대응",
+                dimension: 4,
+                text: "문제 해결 시:",
+                options: [
+                    { text: "직감적으로 괜찮을 것 같은 방법을 시도한다", value: "O" },
+                    { text: "데이터와 논리적 근거를 바탕으로 접근한다", value: "A" }
+                ]
+            },
+            // Part 6: 결정 방식 (D/I)
+            {
+                category: "결정 방식",
+                dimension: 5,
+                text: "중요한 결정을 할 때:",
+                options: [
+                    { text: "충분한 정보를 수집하고 신중히 결정한다", value: "D" },
+                    { text: "직감을 믿고 빠르게 결정한다", value: "I" }
+                ]
+            },
+            {
+                category: "결정 방식",
+                dimension: 5,
+                text: "새로운 고객 접근 시:",
+                options: [
+                    { text: "사전 조사를 철저히 하고 접근한다", value: "D" },
+                    { text: "첫인상과 느낌으로 접근 방법을 정한다", value: "I" }
+                ]
+            },
+            {
+                category: "결정 방식",
+                dimension: 5,
+                text: "제안서 작성 시:",
+                options: [
+                    { text: "여러 번 검토하고 수정한다", value: "D" },
+                    { text: "핵심을 빠르게 작성하고 진행한다", value: "I" }
+                ]
+            },
+            {
+                category: "결정 방식",
+                dimension: 5,
+                text: "기회가 왔을 때:",
+                options: [
+                    { text: "장단점을 따져보고 결정한다", value: "D" },
+                    { text: "놓치지 않고 일단 잡는다", value: "I" }
+                ]
+            },
+            // Part 7: 신뢰 기반 (P/H)
+            {
+                category: "신뢰 기반",
+                dimension: 6,
+                text: "새로운 파트너를 평가할 때:",
+                options: [
+                    { text: "실적과 경험을 중점적으로 본다", value: "P" },
+                    { text: "사람됨과 케미를 중요하게 본다", value: "H" }
+                ]
+            },
+            {
+                category: "신뢰 기반",
+                dimension: 6,
+                text: "신뢰 관계는:",
+                options: [
+                    { text: "함께 일하며 쌓은 성과로 만들어진다", value: "P" },
+                    { text: "인간적인 교감으로 만들어진다", value: "H" }
+                ]
+            },
+            {
+                category: "신뢰 기반",
+                dimension: 6,
+                text: "추천을 할 때:",
+                options: [
+                    { text: "검증된 실적을 바탕으로 한다", value: "P" },
+                    { text: "개인적 신뢰를 바탕으로 한다", value: "H" }
+                ]
+            },
+            {
+                category: "신뢰 기반",
+                dimension: 6,
+                text: "장기 고객 관계에서:",
+                options: [
+                    { text: "지속적인 성과 제공이 핵심이다", value: "P" },
+                    { text: "인간적인 유대감이 핵심이다", value: "H" }
+                ]
+            },
+            // Part 8: 조직문화 적응 (S/A)
+            {
+                category: "조직문화 적응",
+                dimension: 7,
+                text: "회사 정책에 대해:",
+                options: [
+                    { text: "내 방식대로 해석하고 적용한다", value: "S" },
+                    { text: "회사 가이드라인을 충실히 따른다", value: "A" }
+                ]
+            },
+            {
+                category: "조직문화 적응",
+                dimension: 7,
+                text: "팀 문화에서:",
+                options: [
+                    { text: "내 스타일을 유지하며 일한다", value: "S" },
+                    { text: "팀 분위기에 맞춰 조정한다", value: "A" }
+                ]
+            },
+            {
+                category: "조직문화 적응",
+                dimension: 7,
+                text: "새로운 환경에서:",
+                options: [
+                    { text: "내 방식으로 새로운 길을 만든다", value: "S" },
+                    { text: "기존 방식을 빠르게 습득한다", value: "A" }
+                ]
+            },
+            {
+                category: "조직문화 적응",
+                dimension: 7,
+                text: "성과 평가 기준이 바뀌면:",
+                options: [
+                    { text: "내가 옳다고 믿는 방식을 고수한다", value: "S" },
+                    { text: "새로운 기준에 맞춰 전략을 수정한다", value: "A" }
+                ]
+            }
+        ];
+
+        // 차원 정보
+        const dimensions = [
+            { name: "일 처리 방식", labels: ["계획형(P)", "유연형(F)"] },
+            { name: "대인관계 태도", labels: ["협력형(C)", "주도형(L)"] },
+            { name: "성과 접근", labels: ["꾸준형(S)", "목표형(T)"] },
+            { name: "감정 표현", labels: ["내면형(R)", "표현형(E)"] },
+            { name: "스트레스 대응", labels: ["긍정형(O)", "분석형(A)"] },
+            { name: "결정 방식", labels: ["신중형(D)", "직감형(I)"] },
+            { name: "신뢰 기반", labels: ["경험형(P)", "인간형(H)"] },
+            { name: "조직문화 적응", labels: ["독립형(S)", "순응형(A)"] }
+        ];
+
+        // 상태 관리
+        let currentQuestion = 0;
+        let answers = new Array(32).fill(null);
+        let dimensionScores = new Array(8).fill(0).map(() => ({ first: 0, second: 0 }));
+        let userName = '';
+
+        // 유형 조합별 특성
+        const typeDescriptions = {
+            "PCSO": { 
+                title: "전략적 관계구축형",
+                subtitle: "체계적인 계획으로 신뢰를 쌓는 영업 전문가",
+                strengths: ["장기 고객 관계 구축", "안정적 실적 달성", "팀워크 우수"],
+                improvements: ["빠른 의사결정", "유연한 대응", "리스크 테이킹"]
+            },
+            "PCST": {
+                title: "목표달성 협력자",
+                subtitle: "계획적이면서 목표 지향적인 팀 플레이어",
+                strengths: ["목표 달성률 높음", "체계적 접근", "협업 능력"],
+                improvements: ["감정적 유연성", "즉흥적 대응", "창의적 접근"]
+            },
+            "PCTO": {
+                title: "긍정적 실행가",
+                subtitle: "계획을 세우고 긍정적으로 실행하는 유형",
+                strengths: ["실행력 우수", "팀 분위기 메이커", "위기 극복력"],
+                improvements: ["리스크 분석", "세부사항 관리", "현실적 평가"]
+            },
+            "PLSO": {
+                title: "체계적 리더",
+                subtitle: "계획적으로 팀을 이끄는 안정적 리더",
+                strengths: ["리더십", "전략 수립", "조직 관리"],
+                improvements: ["유연한 소통", "즉각적 피드백", "감정적 공감"]
+            },
+            "FLTE": {
+                title: "카리스마 개척자",
+                subtitle: "유연하고 도전적인 시장 개척형 리더",
+                strengths: ["신규 시장 개척", "빠른 의사결정", "영향력"],
+                improvements: ["세부 계획", "리스크 관리", "일관성"]
+            },
+            "FCSE": {
+                title: "공감형 네트워커",
+                subtitle: "유연하고 협력적인 관계 중심 영업인",
+                strengths: ["인맥 구축", "고객 만족도", "적응력"],
+                improvements: ["목표 의식", "성과 관리", "주도성"]
+            },
+            "PCRA": {
+                title: "분석적 전략가",
+                subtitle: "신중하고 체계적인 분석형 영업인",
+                strengths: ["데이터 분석", "리스크 관리", "전략 수립"],
+                improvements: ["감정 표현", "즉흥성", "대인관계"]
+            },
+            "FLOI": {
+                title: "직관적 혁신가",
+                subtitle: "유연하고 직관적인 혁신형 리더",
+                strengths: ["창의성", "빠른 적응", "트렌드 파악"],
+                improvements: ["체계성", "꾸준함", "세밀한 분석"]
+            }
+        };
+
+        // 시작 함수
+        function startTest() {
+            const nameInput = document.getElementById('userName');
+            userName = nameInput.value.trim();
+            
+            if (!userName) {
+                nameInput.style.borderColor = '#ff6b6b';
+                nameInput.focus();
+                alert('이름을 입력해주세요.');
+                return;
+            }
+            
+            document.getElementById('intro').classList.remove('active');
+            document.getElementById('questionContainer').classList.add('active');
+            showQuestion();
+        }
+
+        // 질문 표시
+        function showQuestion() {
+            const question = questions[currentQuestion];
+            document.getElementById('questionNumber').textContent = `문항 ${currentQuestion + 1}/32`;
+            document.getElementById('categoryBadge').textContent = question.category;
+            document.getElementById('questionText').textContent = question.text;
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                if (answers[currentQuestion] === option.value) {
+                    optionDiv.classList.add('selected');
+                }
+                optionDiv.textContent = option.text;
+                optionDiv.onclick = () => selectOption(option.value, optionDiv);
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            // 진행률 업데이트
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            // 버튼 상태 업데이트
+            document.getElementById('prevBtn').style.display = currentQuestion === 0 ? 'none' : 'block';
+            document.getElementById('nextBtn').disabled = answers[currentQuestion] === null;
+            
+            if (currentQuestion === questions.length - 1) {
+                document.getElementById('nextBtn').textContent = '결과 보기';
+            } else {
+                document.getElementById('nextBtn').textContent = '다음';
+            }
+        }
+
+        // 옵션 선택
+        function selectOption(value, element) {
+            answers[currentQuestion] = value;
+            
+            // 선택 표시 업데이트
+            document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            // 다음 버튼 활성화
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        // 이전 질문
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion();
+            }
+        }
+
+        // 다음 질문
+        function nextQuestion() {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        // 결과 계산 및 표시
+        function showResult() {
+            // 점수 계산
+            questions.forEach((question, index) => {
+                const answer = answers[index];
+                const dimension = question.dimension;
+                
+                if (answer === questions[index].options[0].value) {
+                    dimensionScores[dimension].first++;
+                } else {
+                    dimensionScores[dimension].second++;
+                }
+            });
+            
+            // 유형 코드 생성
+            let typeCode = '';
+            let typeCodeForKey = '';
+            dimensionScores.forEach((score, index) => {
+                const dimensionCode = score.first >= score.second ? 
+                    dimensions[index].labels[0].match(/\((\w)\)/)[1] : 
+                    dimensions[index].labels[1].match(/\((\w)\)/)[1];
+                typeCode += dimensionCode;
+                if (index < 4) typeCodeForKey += dimensionCode;
+            });
+            
+            // 결과 화면 표시
+            document.getElementById('questionContainer').classList.remove('active');
+            document.getElementById('resultContainer').classList.add('active');
+            
+            // 유형 코드 표시
+            document.getElementById('resultType').textContent = typeCode;
+            
+            // 유형 설명 표시
+            const typeInfo = typeDescriptions[typeCodeForKey] || {
+                title: "복합 성향형",
+                subtitle: "다양한 특성이 균형있게 나타나는 유형",
+                strengths: ["균형감", "적응력", "다재다능"],
+                improvements: ["전문성 강화", "일관성", "깊이 있는 접근"]
+            };
+            
+            document.getElementById('resultTitle').textContent = typeInfo.title;
+            document.getElementById('resultSubtitle').textContent = typeInfo.subtitle;
+            
+            // 차원별 결과 표시
+            const dimensionResultsContainer = document.getElementById('dimensionResults');
+            dimensionResultsContainer.innerHTML = '';
+            
+            dimensionScores.forEach((score, index) => {
+                const dimension = dimensions[index];
+                const isFirstType = score.first >= score.second;
+                const percentage = isFirstType ? 
+                    (score.first / 4) * 100 : 
+                    (score.second / 4) * 100;
+                const selectedType = isFirstType ? 
+                    dimension.labels[0] : 
+                    dimension.labels[1];
+                const strength = Math.max(score.first, score.second);
+                
+                const dimensionDiv = document.createElement('div');
+                dimensionDiv.className = 'dimension';
+                dimensionDiv.innerHTML = `
+                    <div class="dimension-header">
+                        <span class="dimension-name">${dimension.name}</span>
+                        <div style="display: flex; align-items: center;">
+                            <span class="dimension-result">${selectedType}</span>
+                            <div class="strength-indicator">
+                                ${Array.from({length: 4}, (_, i) => 
+                                    `<div class="strength-dot ${i < strength ? 'filled' : ''}"></div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dimension-bar">
+                        <span style="font-size: 0.9em; color: #666;">${dimension.labels[0]}</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: ${isFirstType ? percentage : 100 - percentage}%"></div>
+                        </div>
+                        <span style="font-size: 0.9em; color: #666;">${dimension.labels[1]}</span>
+                    </div>
+                `;
+                dimensionResultsContainer.appendChild(dimensionDiv);
+            });
+            
+            // 분석 섹션
+            const analysisSection = document.getElementById('analysisSection');
+            analysisSection.innerHTML = `
+                <h3>상세 분석</h3>
+                <div class="analysis-section">
+                    <h4>핵심 강점</h4>
+                    <ul class="analysis-list">
+                        ${typeInfo.strengths.map(strength => `<li>${strength}</li>`).join('')}
+                    </ul>
+                </div>
+                <div class="analysis-section">
+                    <h4>개발 영역</h4>
+                    <ul class="analysis-list">
+                        ${typeInfo.improvements.map(improvement => `<li>${improvement}</li>`).join('')}
+                    </ul>
+                </div>
+                <div class="analysis-section">
+                    <h4>추천 영업 전략</h4>
+                    <p>${generateStrategy(typeCode)}</p>
+                </div>
+            `;
+        }
+
+        // 전략 생성
+        function generateStrategy(typeCode) {
+            const strategies = {
+                'P': '체계적인 계획과 프로세스를 활용하여 ',
+                'F': '유연한 접근과 즉각적인 대응으로 ',
+                'C': '고객과의 협력적 관계를 바탕으로 ',
+                'L': '주도적이고 설득력 있는 리더십으로 ',
+                'S': '꾸준하고 안정적인 성과 창출을 통해 ',
+                'T': '도전적인 목표 설정과 집중력으로 ',
+                'O': '긍정적 마인드와 기회 포착 능력으로 ',
+                'A': '데이터 기반의 분석적 접근으로 '
+            };
+            
+            let strategy = '';
+            for (let i = 0; i < 4; i++) {
+                if (strategies[typeCode[i]]) {
+                    strategy += strategies[typeCode[i]];
+                }
+            }
+            strategy += '영업 성과를 극대화하세요. ';
+            
+            // 추가 조언
+            if (typeCode.includes('P') && typeCode.includes('C')) {
+                strategy += '특히 B2B 복잡 영업이나 장기 프로젝트에 강점을 보일 것입니다.';
+            } else if (typeCode.includes('F') && typeCode.includes('L')) {
+                strategy += '신규 시장 개척이나 혁신적인 제품 영업에 적합합니다.';
+            } else if (typeCode.includes('S') && typeCode.includes('A')) {
+                strategy += '안정적인 고객 기반 확보와 지속적인 성장에 유리합니다.';
+            } else {
+                strategy += '다양한 영업 상황에서 균형잡힌 성과를 낼 수 있습니다.';
+            }
+            
+            return strategy;
+        }
+
+        // 다시 시작
+        function restartTest() {
+            currentQuestion = 0;
+            answers = new Array(32).fill(null);
+            dimensionScores = new Array(8).fill(0).map(() => ({ first: 0, second: 0 }));
+            
+            document.getElementById('resultContainer').classList.remove('active');
+            document.getElementById('intro').classList.add('active');
+            document.getElementById('progressBar').style.width = '0%';
+        }
+
+        // 결과 저장
+        function saveResult() {
+            const resultData = {
+                name: userName,
+                date: new Date().toLocaleDateString('ko-KR'),
+                timestamp: new Date().toISOString(),
+                typeCode: document.getElementById('resultType').textContent,
+                title: document.getElementById('resultTitle').textContent,
+                scores: dimensionScores,
+                dimensionDetails: dimensions.map((dim, i) => ({
+                    dimension: dim.name,
+                    type: dimensionScores[i].first >= dimensionScores[i].second ? dim.labels[0] : dim.labels[1],
+                    score: `${dimensionScores[i].first}:${dimensionScores[i].second}`
+                }))
+            };
+            
+            // 구글 스프레드시트로 전송
+            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0Glxvhy6DJNMEX_HMdp6o7XvG8HsuQVCR6rQeA4GpTsch077FtnLYT8uPgJsarR5V/exec';
+            
+            // 로딩 표시
+            const saveBtn = document.querySelector('.save-btn');
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = '저장 중...';
+            saveBtn.disabled = true;
+            
+            // Google Apps Script로 데이터 전송
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(resultData)
+            })
+            .then(() => {
+                // 로컬 파일로도 다운로드
+                downloadResultFile(resultData);
+                
+                alert('결과가 저장되었습니다!');
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // 오류가 있어도 로컬 파일은 다운로드
+                downloadResultFile(resultData);
+                
+                alert('온라인 저장 중 오류가 발생했습니다. 파일로 다운로드됩니다.');
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+            });
+        }
+        
+        // 파일 다운로드 함수
+        function downloadResultFile(resultData) {
+            const text = `SPTA 영업사원 성향 분석 결과\n\n` +
+                `이름: ${resultData.name}\n` +
+                `검사일: ${resultData.date}\n` +
+                `유형: ${resultData.typeCode} - ${resultData.title}\n\n` +
+                `세부 점수:\n` +
+                dimensions.map((dim, i) => 
+                    `${dim.name}: ${dim.labels[0]} ${dimensionScores[i].first}점 / ${dim.labels[1]} ${dimensionScores[i].second}점`
+                ).join('\n');
+            
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `SPTA_결과_${resultData.name}_${resultData.typeCode}_${resultData.date.replace(/\./g, '')}.txt`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
